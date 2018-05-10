@@ -1,4 +1,4 @@
-              Running The LOCKSS Stochastic Testing Framework
+              **Running The LOCKSS Stochastic Testing Framework**
 ----------------------------------------------------------------------------
 
 ###  Overview
@@ -207,7 +207,7 @@ There are three "test cases" that are actually demos created for the TRAC audit
 of the CLOCKSS Archive. They show the basic functionality of the LOCKSS Polling
 and Repair Protocol, which is described here:
 
-http://documents.clockss.org/index.php/LOCKSS:_Polling_and_Repair_Protocol
+http://documents.clockss.org/index.php/LOCKSS:`_Polling_and_Repair_Protocol`
 
 Each demo creates a network of 5 LOCKSS daemons configured to preserve one
 AU of simulated content:
