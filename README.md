@@ -1,7 +1,17 @@
-              **Running The LOCKSS Stochastic Testing Framework**
-----------------------------------------------------------------------------
+#### Building and Running STF in an external LAAWS Projects.
+1. Clone the project.
+    type: 'git clone'
+2. Install the project.
+    * cd to the project directory
+    * Install the package: `pip install -e .`
+3. Run.
+    * cd to the test directory. This must have a daemon in the tree.
+    * Create a testsuite.opts file to configure for your project.
+    * type: `run_stf <Test>`
+    
+####  Running The LOCKSS Stochastic Testing Framework
 
-###  Overview
+####  Overview
 
 This directory provides a framework for running functional tests on the
 LOCKSS system.  The tests are invoked using the 'testsuite.py' script and
@@ -42,7 +52,7 @@ deleteAfterSuccess parameter -- see below).
 
 ----------------------------------------------------------------------------
 
-### Configuration
+#### Configuration
 
 Typically, no configuration is necessary, the default values are safe.
 However, certain parameters can be overridden, either by editing the config
@@ -121,11 +131,11 @@ set.
 
 ----------------------------------------------------------------------------
 
-### Invocation
+#### Invocation
 
 The tests can be invoked with the command:
 
-    % python testsuite.py <testsuite>
+`python testsuite.py <testsuite>`
 
 Where <testsuite> is one of the following:
 > 
@@ -154,7 +164,7 @@ The third test creates a random number of extra nodes.
 
 ----------------------------------------------------------------------------
 
-### Adding test cases
+#### Adding test cases
 
 For a quick introduction to Pyunit, see:
     http://pyunit.sourceforge.net/pyunit.html
@@ -167,36 +177,36 @@ a. Create the test case class.  It should have a unique name, extend
    this will be printed to the script log when the test is run.  For
    example:
 
-    class MyNiftyTestCase(LockssTestCase):
-
-        def runTest(self):
-           """One-line test description"""
-           ...
+>   class MyNiftyTestCase(LockssTestCase):
+>
+>        def runTest(self):
+>           """One-line test description"""
+>          ...
 
 b. At the end of the file, create a function that returns a
    unittest.TestSuite() containing your test case(s).  The name of the test
    suite is invoked as a command-line argument to the script, so it should
    be somewhat descriptive.  For example,
 
-    def niftyTests():
-        suite = unittest.TestSuite()
-        suite.addTest(MyNiftyTestCase())
-        suite.addTest(MyOtherNiftyTestCase())
-        return suite
+>    def niftyTests():
+>        suite = unittest.TestSuite()
+>        suite.addTest(MyNiftyTestCase())
+>        suite.addTest(MyOtherNiftyTestCase())
+>        return suite
 
 c. You can now run this test suite with the command:
 
-    % `python testsuite.py niftyTests`
+ >   % `python testsuite.py niftyTests`
 
 ----------------------------------------------------------------------------
 
-### Cleanup
+#### Cleanup
 
 If the tests fail, or if deleteAfterSuccess is set to 'False', the daemon
 directories will not be deleted.  A very simple cleanup script is included.
 Just invoke it with:
 
-    % `./clean.sh`
+`./clean.sh`
 
 
 ----------------------------------------------------------------------------
@@ -240,14 +250,14 @@ AU of simulated content:
 As checked out from github, the three demos work correctly. However, they are
 more informative if they are run as follows:
 
-	`cp testsuite.opt.demo testsuite.opt`
-	`python testsuite.py AuditDemo1`
-	`./clean.sh`
-	`python testsuite.py AuditDemo2`
-	`./clean.sh`
-	`python testsuite.py AuditDemo3`
-	`./clean.sh`
-	`rm testsuite.opt`
+1. `cp testsuite.opt.demo testsuite.opt`
+2. `python testsuite.py AuditDemo1`
+3. `./clean.sh`
+4. `python testsuite.py AuditDemo2`
+5. `./clean.sh`
+6. `python testsuite.py AuditDemo3`
+7. `./clean.sh`
+8. `rm testsuite.opt`
 
 The testsuite.opt file configures the demos as follows:
 

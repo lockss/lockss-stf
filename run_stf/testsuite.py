@@ -1724,7 +1724,9 @@ class SimpleV3PoPCompatibilityTestCase(V3TestCases):
 # RepairFromPublisherV3TestCase
 
 # Load configuration (*before* creating test instances)
-lockss_util.config.load('testsuite.props')
+# Add package config file.
+scriptPath = os.path.dirname(os.path.abspath(__file__))
+lockss_util.config.load(os.path.join(scriptPath, 'testsuite.props'))
 
 if os.path.isfile('testsuite.opt'):
     lockss_util.config.load('testsuite.opt')
@@ -1785,7 +1787,8 @@ postTagTests = unittest.TestSuite((tinyUiTests, v3Tests))
 frameworkList = []
 deleteAfterSuccess = lockss_util.config.getBoolean('deleteAfterSuccess', True)
 
-if __name__ == '__main__':
+def main(args=None):
+    """The main routine."""
     try:
         unittest.main(
             defaultTest='v3Tests', argv=sys.argv[0:1] + ['-q'] + sys.argv[1:])
@@ -1805,3 +1808,6 @@ if __name__ == '__main__':
     except Exception, exception:
         log.error(exception)
         raise
+
+if __name__ == "__main__":
+    main()

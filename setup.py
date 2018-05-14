@@ -22,15 +22,19 @@ with open(path.join(here,'LICENSE'), encoding='utf-8') as f:
     license = f.read()
 
 setup(
-    name='lockss-stf',
-    version='1.0.0',
+    name='run_stf',
+    version='0.0.1',
     url='https://github.com/lockss/lockss-stf.git',
     license=license,
     author='LOCKSS-DLSS, Stanford University',
     author_email='clairetg@stanford.edu',
     description='The LOCKSS Stochastic Testing Framework',
     long_description=readme,
-    long_description_content_type='text/markdown',
-    packages=find_packages(exclude=['docs', 'bin']),
-    python_requires='>=2.7'
+    packages=['run_stf'],
+    entry_points = {
+        'console_scripts': ['run_stf=run_stf.testsuite:main'],
+    },
+    include_package_data=True,
+    python_requires='>=2.7',
+
 )
