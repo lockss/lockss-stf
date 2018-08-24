@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 """This test suite requires at minimum a top-level work directory in which to
 build frameworks.  If desired, optional parameters may also be set to change
 the default behavior.  See testsuite.props for details."""
@@ -38,7 +39,7 @@ import unittest
 import lockss_daemon
 import lockss_util
 from lockss_util import log
-
+from unittest import TestCase
 
 class LockssTestCases(unittest.TestCase):
     """Abstract superclass for all STF test cases"""
@@ -314,7 +315,7 @@ class V3TestCases(LockssTestCases):
                             self.expected_voter_agreement, agreement,
                             'Client %s wrong agreement %s with box %s' %
                             (client, agreement, box))
-                        if self.symmetric == True:
+                        if self.symmetric:
                             log.info(
                                 'Symmetric client %s repairers OK' % client)
                         else:
@@ -445,7 +446,8 @@ class PollerTestCase(V3TestCases):
         V3TestCases.__init__(self, methodName)
         self.simulated_AU_parameters = {'numFiles': 3}
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -460,7 +462,8 @@ class SimpleV2RepoV3TestCase(V3TestCases):
             'org.lockss.blockHasher.enableLocalHash': 'false',
         }
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -471,14 +474,16 @@ class SimpleV3TestCase(V3TestCases):
         V3TestCases.__init__(self, methodName)
         self.simulated_AU_parameters = {'numFiles': 3}
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
 class PollPolicyTestCases(V3TestCases):
     """ Abstract Class """
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
     def _check_v3_result(self, nodes):
@@ -541,7 +546,8 @@ class AuditDemo1(V3TestCases):
         V3TestCases.__init__(self, methodName)
         self.simulated_AU_parameters = {'depth': 1, 'branch': 1, 'numFiles': 2}
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
     def _check_v3_result(self, nodes):
@@ -582,7 +588,7 @@ class AuditDemo2(V3TestCases):
                         self.expected_voter_agreement, agreement,
                         'Client %s wrong agreement %s with box %s' %
                         (client, agreement, box))
-                    if self.symmetric == True:
+                    if self.symmetric:
                         log.info('Symmetric client %s repairers OK' % client)
                     else:
                         log.info('Asymmetric client %s repairers OK' % client)
@@ -611,7 +617,8 @@ class SimpleV3LocalTestCase(V3TestCases):
         agreeURL = summary['Agreeing URLs']
         self.assertEqual(summary['Total URLs In Vote'], agreeURL['value'])
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -704,7 +711,8 @@ class UnsuccessfulRepairV3TestCase(V3TestCases):
                 }, self.victim)
         self.victim.reloadConfiguration()
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
     def _check_v3_result(self, nodes):
@@ -1255,9 +1263,8 @@ class TotalLossRecoveryPoPV3TestCase(TotalLossRecoveryV3Tests):
         repair_count = 0
         for node in nodes:
             node_count = node_count + 1
-            if self.victim.isAuNode(self.AU, node.url):
-                if self._content_matches(node):
-                    repair_count = repair_count + 1
+            if self.victim.isAuNode(self.AU, node.url) and self._content_matches(node):
+                repair_count = repair_count + 1
         log.info('%i nodes %i repaired' % (node_count, repair_count))
         # There is a small chance that the following tests will generate
         # a false negative, about the chance of tossing 120 heads in a row
@@ -1650,7 +1657,8 @@ class SimpleV3SymmetricTestCase(V3TestCases):
 
         self.expected_voter_agreement = '100.00'
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -1699,7 +1707,8 @@ class SimpleV3PoPTestCase(V3TestCases):
         # XXX need to confirm poll on ~15 files
         # XXX need to confirm willing repairer status
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -1716,7 +1725,8 @@ class SimpleV3PoPCompatibilityTestCase(V3TestCases):
         # XXX need to confirm poll on ~15 files
         # XXX need to confirm willing repairer status
 
-    def _damage_AU(self):
+    @staticmethod
+    def _damage_AU():
         return []
 
 
@@ -1785,29 +1795,28 @@ postTagTests = unittest.TestSuite((tinyUiTests, v3Tests))
 
 # Module globals
 frameworkList = []
-deleteAfterSuccess = lockss_util.config.getBoolean('deleteAfterSuccess', True)
+deleteAfterSuccess = lockss_util.config.getBoolean( 'deleteAfterSuccess', True )
 
-def main(args=None):
-    """The main routine."""
+def main():
     try:
-        unittest.main(
-            defaultTest='v3Tests', argv=sys.argv[0:1] + ['-q'] + sys.argv[1:])
-    except (KeyboardInterrupt, SystemExit), exception:
+        unittest.main( module='lockss_stf', defaultTest = 'v3Tests',
+                       argv = sys.argv[ 0 : 1 ] + [ '-q' ] + sys.argv[ 1 : ] )
+    except ( KeyboardInterrupt, SystemExit ), exception:
         for framework in frameworkList:
             if framework.isRunning:
-                log.info('Stopping framework')
+                log.info( 'Stopping framework' )
                 framework.stop()
 
-        if type(exception) is KeyboardInterrupt:
+        if type( exception ) is KeyboardInterrupt:
             sys.exit(2)
-        if type(exception) is SystemExit:
+        if type( exception ) is SystemExit:
             if not exception.code and deleteAfterSuccess:
                 for framework in frameworkList:
                     framework.clean()
             raise
     except Exception, exception:
-        log.error(exception)
+        log.error( exception )
         raise
-
-if __name__ == "__main__":
-    main()
+		
+if __name__ == '__main__':
+		main()

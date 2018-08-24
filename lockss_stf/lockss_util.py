@@ -9,6 +9,7 @@ import socket
 import threading
 import urllib
 import urllib2
+import urlparse
 
 DEBUG2 = logging.DEBUG - 1
 DEBUG3 = logging.DEBUG - 2
@@ -108,7 +109,7 @@ class Multipart_Form_HTTP_Handler(urllib2.HTTPHandler):
         def multipart_encode(data, files, boundary):
             form = []
             if data:
-                for key, value in cgi.parse_qsl(data):
+                for key, value in urlparse.parse_qsl(data):
                     form.append('--' + boundary)
                     form.append(
                         'Content-Disposition: form-data; name="%s"' % key)

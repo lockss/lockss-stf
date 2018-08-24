@@ -159,6 +159,7 @@ class LockssDaemon:
     """Wrapper around a daemon instance.  Controls starting and stopping a LOCKSS Java daemon."""
 
     def __init__(self, daemonDir, classpath, configList, isRest):
+        self.jarfile = os.path.abspath("lib/current.jar")
         self.daemonDir = daemonDir
         self.classpath = classpath
         self.configList = configList
@@ -178,7 +179,6 @@ class LockssDaemon:
                          for x in self.configList]
                 self.configList = [y for z in pairs for y in z]
             if self.isRest:
-                self.jarfile = os.path.abspath("lib/current.jar")
                 self.daemon = subprocess.Popen(
                     (self.javaBin, '-jar', self.jarfile, '-Drun.arguments=') +
                     tuple(self.configList),
@@ -200,7 +200,7 @@ class LockssDaemon:
         if self.daemon:
             try:
                 os.kill(self.daemon.pid, signal.SIGKILL)
-                #self.daemon.kill() # Python 2.6+
+                # self.daemon.kill() # Python 2.6+
                 self.daemon.wait()
             except OSError:
                 log.debug('Daemon already dead?')
@@ -212,7 +212,7 @@ class LockssDaemon:
     def requestThreadDump(self):
         if self.daemon:
             os.kill(self.daemon.pid, signal.SIGQUIT)
-            #self.daemon.send_signal( signal.SIGQUIT ) # Python 2.6+
+            # self.daemon.send_signal( signal.SIGQUIT ) # Python 2.6+
 
 
 class Framework:
@@ -304,11 +304,11 @@ class Framework:
             self.__writeLocalConfig(localConfigFile, daemonDir, port)
             # Create daemon
             isrest = daemon_index == self.restid
-            daemon = LockssDaemon(daemonDir, self.__makeClasspath(),
-                                  urlList + (localConfigFile, isrest)
-                                  if urlList else (globalConfigFile,
-                                                   localConfigFile,
-                                                   extraConfigFile), isrest)
+            daemon = LockssDaemon(
+                daemonDir, self.__makeClasspath(),
+                urlList + (localConfigFile, isrest)
+                if urlList else (globalConfigFile, localConfigFile,
+                                 extraConfigFile), isrest)
             self.daemonList.append(daemon)
             # create client for this daemon
             self.clientList.append(
@@ -567,13 +567,13 @@ class Client:
         if au.title not in result or 'Restore Selected AUs' not in result:
             raise LockssError('Unexpected response from BatchAuConfig servlet')
         # Now confirm the restoration.
-        assert re.search('\d+ AUs? restored',
-                         self.__execute_post(
-                             'BatchAuConfig', {
-                                 'lockssAction': 'DoAddAus',
-                                 'Verb': 5,
-                                 'auid': au.auId
-                             }).read()), 'Restore failed'
+        assert re.search(
+            '\d+ AUs? restored',
+            self.__execute_post('BatchAuConfig', {
+                'lockssAction': 'DoAddAus',
+                'Verb': 5,
+                'auid': au.auId
+            }).read()), 'Restore failed'
         # If this was successful, delete the configbackup.zip file
         os.remove('configbackup.zip')
 
@@ -599,7 +599,7 @@ class Client:
         return self._getStatusTable('single_crawl_status_table', key)
 
     def getListOfAuids(self):
-        '''Returns the list of AUIDs held by the daemons'''
+        """Returns the list of AUIDs held by the daemons"""
         return [map['AuId'] for map in self._getStatusTable('AuIds')[1]]
 
     def getDictOfVolumes(self):
@@ -661,9 +661,9 @@ class Client:
 
     def getViewContentUrl(self, AU, url, filter):
         content_url = '%sViewContent?frame=content&filter=1&' \
-            'auid=%s&url=%s' % \
-            (self.base_URL, urllib.quote_plus(AU.auId),
-             urllib.quote_plus(url))
+                      'auid=%s&url=%s' % \
+                      (self.base_URL, urllib.quote_plus(AU.auId),
+                       urllib.quote_plus(url))
         return content_url
 
     def getViewContent(self, AU, url, filter):
@@ -775,8 +775,10 @@ class Client:
             'auid': AU.auId
         })
 
-    def getV3PollKey(self, AU, excluded_poll_keys=[]):
+    def getV3PollKey(self, AU, excluded_poll_keys=None):
         """Return the key of a poll on the AU, excluding poll keys in excluded_poll_keys."""
+        if excluded_poll_keys is None:
+            excluded_poll_keys = []
         for row in self.getAuV3Pollers():
             if 'pollId' in row and row['pollId']['key'] not in excluded_poll_keys and self.isAuIdOrRef(
                     row['auId'], AU):
@@ -998,8 +1000,10 @@ class Client:
         the Tiny UI.  May throw urllib2.URLError or urllib2.HTTPError."""
         return self.__execute_post()
 
-    def hasV3Poller(self, AU, excluded_poll_keys=[]):
+    def hasV3Poller(self, AU, excluded_poll_keys=None):
         """Return true if the client has an active or completed V3 Poller not identified in excluded_poll_keys."""
+        if excluded_poll_keys is None:
+            excluded_poll_keys = []
         return self.getV3PollKey(AU, excluded_poll_keys) is not None
 
     def hasV3Voter(self, AU):
@@ -1124,10 +1128,12 @@ class Client:
 
     def waitForCompletedV3Poll(self,
                                AU,
-                               excluded_polls=[],
+                               excluded_polls=None,
                                timeout=DEF_TIMEOUT,
                                sleep=DEF_SLEEP):
         """Wait until a poll not in excluded_polls has completed."""
+        if excluded_polls is None:
+            excluded_polls = []
         return self.wait(lambda: self.hasCompletedV3Poll(AU, excluded_polls),
                          timeout, sleep)
 
@@ -1142,9 +1148,11 @@ class Client:
 
     def waitForV3Poller(self,
                         AU,
-                        excluded_poll_keys=[],
+                        excluded_poll_keys=None,
                         timeout=DEF_TIMEOUT,
                         sleep=DEF_SLEEP):
+        if excluded_poll_keys is None:
+            excluded_poll_keys = []
         return self.wait(lambda: self.hasV3Poller(AU, excluded_poll_keys),
                          timeout, sleep)
 
@@ -1376,9 +1384,9 @@ class Client:
                     summaries[summary.getElementsByTagName('st:title')[0]
                               .firstChild.data] = dict(
                                   (key,
-                                   summary.getElementsByTagName(
-                                       'st:reference')[0].getElementsByTagName(
-                                           'st:' + key)[0].firstChild.data)
+                                   summary.getElementsByTagName('st:reference')
+                                   [0].getElementsByTagName('st:' + key)[
+                                       0].firstChild.data)
                                   for key in ('name', 'key', 'value'))
                 else:
                     stvalue = summary.getElementsByTagName('st:value')
@@ -1396,9 +1404,9 @@ class Client:
                         cells[cell.getElementsByTagName('st:columnname')[
                             0].firstChild.data] = dict(
                                 (key, cell.getElementsByTagName('st:value')[0]
-                                 .getElementsByTagName(
-                                     'st:reference')[0].getElementsByTagName(
-                                         'st:' + key)[0].firstChild.data)
+                                 .getElementsByTagName('st:reference')[0]
+                                 .getElementsByTagName('st:' +
+                                                       key)[0].firstChild.data)
                                 for key in ('name', 'key', 'value'))
                     else:
                         cells[cell.getElementsByTagName('st:columnname')[0]
@@ -1518,9 +1526,8 @@ class Local_Client(Client):
         if not nodes:
             log.warn("getAuNodesWithChildren returned no nodes!")
             return nodes
-        return random.sample(nodes,
-                             random.randint(minCount, min(
-                                 maxCount, len(nodes))))
+        return random.sample(
+            nodes, random.randint(minCount, min(maxCount, len(nodes))))
 
     def getAuRepository(self, au):
         # RepositoryStatus table does not accept a key
@@ -1540,7 +1547,8 @@ class Local_Client(Client):
     ### Methods for causing damage
     ###
 
-    def damageNode(self, node):
+    @staticmethod
+    def damageNode(node):
         """Damage a specific node."""
         # Only want to damage the file contents
         content_path = node.filename()
@@ -1697,7 +1705,7 @@ class AU:
                 self._handleProperty(property)
 
         if self.pluginId != Simulated_AU.SIMULATED_PLUGIN \
-          and not hasattr( self, "base_url" ):
+                and not hasattr(self, "base_url"):
             raise LockssError('Failed to find required key "base_url" in'
                               ' AU ID "%s"' % self.auId)
 
@@ -1707,9 +1715,9 @@ class AU:
         try:
             key, value = property.split('~', 1)
         except ValueError:
-            raise LockssError('Expected to find a ~ character in'
-                              ' property "%s" in AU ID "%s"' % (property,
-                                                                self.auId))
+            raise LockssError(
+                'Expected to find a ~ character in'
+                ' property "%s" in AU ID "%s"' % (property, self.auId))
 
         # unquote_plus doesn't raise any exceptions.
         key = urllib.unquote_plus(key)
@@ -1722,9 +1730,9 @@ class AU:
             # todo: Make properties a dict, not attributes, or
             # make the internal attribues less likely to collide
             # with AU properties.
-            raise LockssError('Duplicate or illegal key "%s" in'
-                              ' property "%s" in AU ID "%s"' % (key, property,
-                                                                self.auId))
+            raise LockssError(
+                'Duplicate or illegal key "%s" in'
+                ' property "%s" in AU ID "%s"' % (key, property, self.auId))
         setattr(self, key, value)
 
     def __str__(self):
@@ -1736,6 +1744,7 @@ class Simulated_AU(AU):
     SIMULATED_PLUGIN = 'org.lockss.plugin.simulated.SimulatedPlugin'
 
     def __init__(self,
+                 auId,
                  root='simContent',
                  depth=0,
                  branch=0,
@@ -1744,6 +1753,7 @@ class Simulated_AU(AU):
                  binRandomSeed=None,
                  fileTypes=FILE_TYPE_TEXT | FILE_TYPE_BIN,
                  repairFromPeerIfMissingUrlPatterns=''):
+        AU.__init__(self, auId)
         self.root = root
         self.depth = depth
         self.branch = branch
@@ -1775,4 +1785,5 @@ frameworkCount = 0
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
